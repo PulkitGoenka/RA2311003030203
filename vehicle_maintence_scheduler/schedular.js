@@ -2,7 +2,7 @@ const axios = require("axios");
 require("dotenv").config();
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
-const BASE_URL = "https://backend-staging.mailet.in/fullstack-intern-eval";
+const BASE_URL = process.env.BASE_URL;
 
 const headers = {
   Authorization: `Bearer ${AUTH_TOKEN}`,
@@ -20,11 +20,10 @@ async function fetchVehicleTasks(depotId) {
 }
 
 function knapsack(tasks, capacity) {
-  const n = tasks.length;
   const dp = new Array(capacity + 1).fill(0);
   const selected = new Array(capacity + 1).fill(null).map(() => []);
 
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < tasks.length; i++) {
     const { duration, impact } = tasks[i];
     for (let w = capacity; w >= duration; w--) {
       if (dp[w - duration] + impact > dp[w]) {
@@ -38,7 +37,8 @@ function knapsack(tasks, capacity) {
 }
 
 async function runScheduler() {
-  console.log("Fetching depots...\n");
+  console.log("Fetching depots from:", BASE_URL);
+  console.log("Token:", AUTH_TOKEN ? "Found ✅" : "MISSING ❌");
 
   let depots;
   try {
@@ -47,6 +47,8 @@ async function runScheduler() {
     console.error("Error fetching depots:", err.response?.status, err.response?.data || err.message);
     return;
   }
+
+  console.log(`\nTotal depots found: ${depots.length}`);
 
   for (const depot of depots) {
     console.log(`\n===== Depot: ${depot.name} (ID: ${depot.id}) =====`);
@@ -61,7 +63,7 @@ async function runScheduler() {
     }
 
     if (!tasks || tasks.length === 0) {
-      console.log("No tasks found for this depot.");
+      console.log("No tasks found.");
       continue;
     }
 
