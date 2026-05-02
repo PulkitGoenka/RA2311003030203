@@ -2,8 +2,7 @@ const axios = require("axios");
 require("dotenv").config();
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
-
-const BASE_URL = "https://backend-staging.mailet.in/fullstack-intern-eval";
+const BASE_URL = process.env.BASE_URL;
 
 const headers = {
   Authorization: `Bearer ${AUTH_TOKEN}`,
@@ -11,29 +10,18 @@ const headers = {
 };
 
 class MinHeap {
-  constructor() {
-    this.heap = [];
-  }
-
+  constructor() { this.heap = []; }
   push(item) {
     this.heap.push(item);
     this._bubbleUp(this.heap.length - 1);
   }
-
   pop() {
     const top = this.heap[0];
     const last = this.heap.pop();
-    if (this.heap.length > 0) {
-      this.heap[0] = last;
-      this._sinkDown(0);
-    }
+    if (this.heap.length > 0) { this.heap[0] = last; this._sinkDown(0); }
     return top;
   }
-
-  size() {
-    return this.heap.length;
-  }
-
+  size() { return this.heap.length; }
   _bubbleUp(i) {
     while (i > 0) {
       const parent = Math.floor((i - 1) / 2);
@@ -42,13 +30,11 @@ class MinHeap {
       i = parent;
     }
   }
-
   _sinkDown(i) {
     const n = this.heap.length;
     while (true) {
       let smallest = i;
-      const l = 2 * i + 1;
-      const r = 2 * i + 2;
+      const l = 2 * i + 1, r = 2 * i + 2;
       if (l < n && this.heap[l].score < this.heap[smallest].score) smallest = l;
       if (r < n && this.heap[r].score < this.heap[smallest].score) smallest = r;
       if (smallest === i) break;
@@ -78,7 +64,7 @@ async function fetchNotifications() {
 }
 
 async function getTop10PriorityInbox() {
-  console.log("Fetching notifications...");
+  console.log("Fetching notifications from:", BASE_URL);
   const notifications = await fetchNotifications();
 
   if (!notifications || notifications.length === 0) {
@@ -89,19 +75,14 @@ async function getTop10PriorityInbox() {
   console.log(`Total notifications fetched: ${notifications.length}`);
 
   const minHeap = new MinHeap();
-
   for (const notif of notifications) {
     const score = calculatePriorityScore(notif);
     minHeap.push({ ...notif, score });
-    if (minHeap.size() > 10) {
-      minHeap.pop();
-    }
+    if (minHeap.size() > 10) minHeap.pop();
   }
 
   const top10 = [];
-  while (minHeap.size() > 0) {
-    top10.unshift(minHeap.pop());
-  }
+  while (minHeap.size() > 0) top10.unshift(minHeap.pop());
 
   console.log("\n===== TOP 10 PRIORITY INBOX =====");
   top10.forEach((n, i) => {
